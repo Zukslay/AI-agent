@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types  
 from prompts import system_prompt
-from call_function import available_functions
+from call_function import available_functions, call_function
 
 def main():
     load_dotenv()
@@ -19,8 +19,6 @@ def main():
     if not user_prompt:
         print("Error: cero arguments provided")
         exit(1)
-    
-    
     
     messages = [
     types.Content(role="user", parts=[types.Part(text=user_prompt)]),
@@ -40,11 +38,15 @@ def main():
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
 
     if not response.function_calls:
+        print(response.text)
         return response.text
-        
+
     for function in response.function_calls:
-        print(f"Calling function: {function.name}({function.args})")
-    
+        function_call_result = call_function(function, verbose)
+        if not function_call_result.parts[0].function_response.response:
+            raise Exception("Error: missing function_call_result.parts[0].function_response.response")
+        
+        print(f"-> {function_call_result.parts[0].function_response.response}")
 
 
     

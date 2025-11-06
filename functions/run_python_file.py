@@ -1,5 +1,6 @@
 import os 
 import subprocess
+from google.genai import types
 
 def run_python_file(working_directory, file_path, args=[]):
     abs_working_directory = os.path.abspath(working_directory)
@@ -15,9 +16,9 @@ def run_python_file(working_directory, file_path, args=[]):
     try:
         if len(args) >= 1:
             
-            process = subprocess.run([abs_path] + args, timeout=30, capture_output=True)
+            process = subprocess.run(["python3",abs_path] + args, timeout=30, capture_output=True)
         else:
-            process = subprocess.run(abs_path, timeout=30, capture_output=True)
+            process = subprocess.run(["python3",abs_path], timeout=30, capture_output=True)
         
         if not process.stdout:
             return "No output produced."
@@ -28,3 +29,24 @@ def run_python_file(working_directory, file_path, args=[]):
 
     except Exception as e:
         return f"Error: executing Python file: {e}"
+    
+schema_run_python_file = types.FunctionDeclaration(
+    name='run_python_file',
+    description='runs a python file in the specified path, constrained to the working directory',
+    parameters=types.Schema(
+        type= types.Type.OBJECT,
+        properties={
+            'file_path': types.Schema(
+                type= types.Type.STRING,
+                description='the path to the python file, relative to the working directory, required argument'
+            ),
+            'args': types.Schema(
+                type= types.Type.ARRAY,
+                items= types.Schema(
+                    type= types.Type.STRING
+                ),
+                description='arguments that will be passed to the python file,optional argument'
+            )
+        }
+    )
+)
