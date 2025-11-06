@@ -69,7 +69,7 @@ def get_prompt():
     return None
 
 def call_with_backoff(client, messages, model, config):
-    delay = 1.0
+    delay = 3.0
     for attempt in range(5):  # up to 5 tries
         try:
             return client.models.generate_content(
