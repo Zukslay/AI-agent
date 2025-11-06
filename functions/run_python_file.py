@@ -16,14 +16,14 @@ def run_python_file(working_directory, file_path, args=[]):
     try:
         if len(args) >= 1:
             
-            process = subprocess.run(["python3",abs_path] + args, timeout=30, capture_output=True)
+            process = subprocess.run(["python3",abs_path] + args, timeout=30, capture_output=True, text=True)
         else:
-            process = subprocess.run(["python3",abs_path], timeout=30, capture_output=True)
+            process = subprocess.run(["python3",abs_path], timeout=30, capture_output=True, text=True)
         
-        if not process.stdout:
-            return "No output produced."
         if process.returncode !=0:
             return f'STDOUT: {process.stdout}\nSTDERR: {process.stderr}\nProcess exited with code {process.returncode}'
+        if not process.stdout and not process.stderr:
+            return "No output produced."
 
         return f'STDOUT: {process.stdout}\nSTDERR: {process.stderr}'
 
@@ -45,7 +45,7 @@ schema_run_python_file = types.FunctionDeclaration(
                 items= types.Schema(
                     type= types.Type.STRING
                 ),
-                description='arguments that will be passed to the python file,optional argument'
+                description="arguments that will be passed to the python file,IT'S AN OPTIONAL ARGUMENT"
             )
         }
     )

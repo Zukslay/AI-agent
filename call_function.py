@@ -12,10 +12,12 @@ available_functions = types.Tool(
         schema_run_python_file
     ]
 )
+
 dispatch = {"get_file_content": get_file_content,
             "get_files_info": get_files_info,
             "write_file": write_file,
             "run_python_file": run_python_file}
+
 def call_function(function_call_part, verbose=False):
     if verbose:
         print(f"Calling function: {function_call_part.name}({function_call_part.args})")
@@ -25,9 +27,18 @@ def call_function(function_call_part, verbose=False):
     work_arg = {"working_directory": "./calculator"}
     some_args = dict(**work_arg, **function_call_part.args)
     
+    func = dispatch.get(function_call_part.name)
+    if not func:
+        return types.Content(
+            role="tool",
+            parts=[types.Part.from_function_response(
+                name=function_call_part.name,
+                response={"error": f"Unknown function: {function_call_part.name}"}
+            )],
+        )
     try:
         
-        result = dispatch.get(function_call_part.name)(**some_args)
+        result = func(**some_args)
         return types.Content(
     role="tool",
     parts=[
@@ -37,18 +48,13 @@ def call_function(function_call_part, verbose=False):
         )
     ],
 )
-    
     except Exception as e:
         print(f'Error: {e}')
         return types.Content(
-    role="tool",
-    parts=[
-        types.Part.from_function_response(
-            name=function_call_part.name,
-            response={"error": f"Unknown function: {function_call_part.name}"},
+            role="tool",
+            parts=[types.Part.from_function_response(
+                name=function_call_part.name, response={"error": str(e)}
+            )]
         )
-    ],
-)
-
 
     
