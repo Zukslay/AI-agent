@@ -1,11 +1,13 @@
 import os
 import sys
+import time
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types  
 from prompts import system_prompt
 from call_function import available_functions, call_function
 from config import MAX_LOOP
+from google.genai.errors import ClientError
 
 def main():
     #leer variables de entorno y obtener cliente gemini
@@ -30,10 +32,8 @@ def main():
     
     for _ in range(MAX_LOOP):
         try:
-            response = client.models.generate_content(
-                model=ai_model,
-                contents=messages,
-                config=ai_config)
+            response = call_with_backoff(client, messages, ai_model, ai_config)
+            
         except Exception as e:
             raise Exception(f"error: {e}")
 
@@ -67,6 +67,22 @@ def get_prompt():
             prompt = arg
             return prompt
     return None
+
+def call_with_backoff(client, messages, model, config):
+    delay = 1.0
+    for attempt in range(5):  # up to 5 tries
+        try:
+            return client.models.generate_content(
+                model=model,
+                contents=messages,
+                config = config
+            )
+        except ClientError as e:
+            if getattr(e, "status_code", None) == 429 and attempt < 4:
+                time.sleep(delay)
+                delay *= 2  # exponential backoff: 1s, 2s, 4s, 8s...
+                continue
+            raise
 
 
 if __name__ == "__main__":
